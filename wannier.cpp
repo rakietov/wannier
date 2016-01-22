@@ -7,7 +7,7 @@
 #include <complex>
 
 
-#include </home/jumper/Eigen324/Eigen/Dense>
+#include <armadillo>
 #include "wannier.h"
 #include "bloch.h"
 #include "lattice.h"
