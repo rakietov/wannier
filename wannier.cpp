@@ -15,18 +15,17 @@
 
 
 // ----------------------------------------------------------------------------------------
-Twannier::Twannier( Tbloch bl1, int which_s)
+Twannier::Twannier( Tbloch bl1, int which_s) : 
+	which_site (which_s), ksize(bl1.return_ksize()), lsize(bl1.return_lsize()), x_max(bl1.return_x_max()),
+	n_of_bands( bl1.return_n_of_bands()), lattice( bl1.return_lattice()), 
+	bloch_functions(bl1.return_bloch_functions())
 {
-	which_site = which_s;
-    ksize = bl1.return_ksize();
-    lsize = bl1.return_lsize();
-    x_max = bl1.return_x_max();
-    n_of_bands = bl1.return_n_of_bands();  
-    lattice = bl1.return_lattice();    
-    bloch_functions = bl1.return_bloch_functions();
 
 	this -> setupXXmatrix();
 	eigVec =  diagonalizeXXmatrix();
+	this -> calc_wannier_f();
+	this -> normalize_wannier();
+	this -> shift_to_real();
 
 }
 // ========================================================================================
@@ -99,7 +98,7 @@ std::vector< std::complex<long double> > Twannier::diagonalizeXXmatrix()
 	std::vector< std::complex<long double> > eigV;
     for(int i2 = 0; i2 < (2*ksize+1)*n_of_bands; i2++)
     {
-        eigV.push_back( eigvec( i2, (2*ksize+1) + which_site )  );
+        eigV.push_back( eigvec( i2, (2*ksize+1)*(n_of_bands-1.) + which_site )  );
     }
    
 //	std::cout << __func__;  
@@ -113,14 +112,41 @@ std::vector< std::complex<long double> > Twannier::diagonalizeXXmatrix()
 // ----------------------------------------------------------------------------------------
 void Twannier::print_wannier( std::string fname )
 {
+	
+	std::fstream fs;
+	fs.open( fname.c_str(), std::fstream::out);
+	fs.precision(15);
+	for(int i = 0; i < wannier_fun.size(); ++i)
+	{
+		fs << wannier_fun[i].first << " " << (wannier_fun[i].second).real() << 
+			" " << (wannier_fun[i].second).imag() << std::endl;
+
+	}
+	fs.close();
 
 }
 // ========================================================================================
 
 
 // ----------------------------------------------------------------------------------------
-void Twannier::shift_to_real()
+void Twannier::normalize_wannier()
 {
+	long double norm_sq = 0.0;
+	for(int i = 0; i < wannier_fun.size()-1; ++i)
+	{
+		norm_sq += wannier_fun[i].second.real() * wannier_fun[i].second.real() * 
+				   (wannier_fun[i+1].first - wannier_fun[i].first);
+	
+		norm_sq += wannier_fun[i].second.imag() * wannier_fun[i].second.imag() * 
+				   (wannier_fun[i+1].first - wannier_fun[i].first);
+
+	}
+
+	for(int i = 0; i < wannier_fun.size(); ++i)
+	{
+		wannier_fun[i].second /= std::sqrt(norm_sq);
+	}
+
 
 }
 // ========================================================================================
@@ -136,8 +162,37 @@ void Twannier::rotate_to_real()
 
 
 // ----------------------------------------------------------------------------------------
-void Twannier::normalize_wannier()
+void Twannier::shift_to_real()
 {
+
+	double norm_re = 0.;
+	double norm_im = 0.;
+	for(int i = 0; i < wannier_fun.size()-1; ++i)
+	{
+		norm_re += wannier_fun[i].second.real() * wannier_fun[i].second.real();
+		norm_im += wannier_fun[i].second.imag() * wannier_fun[i].second.imag();
+	}
+
+	if(norm_re > norm_im)
+	{	
+		for(int i = 0; i < wannier_fun.size(); ++i)
+		{
+			wannier_fun[i].second = std::complex<long double>(
+				std::sqrt(wannier_fun[i].second.real() * wannier_fun[i].second.real() +
+				wannier_fun[i].second.imag() * wannier_fun[i].second.imag())*
+			    wannier_fun[i].second.real()/std::fabs( wannier_fun[i].second.real() ),0.);
+		}
+	}
+	else
+	{
+		for(int i = 0; i < wannier_fun.size(); ++i)
+		{
+			wannier_fun[i].second = std::complex<long double>(
+				std::sqrt(wannier_fun[i].second.real() * wannier_fun[i].second.real() +
+				wannier_fun[i].second.imag() * wannier_fun[i].second.imag())*
+			    wannier_fun[i].second.imag()/std::fabs( wannier_fun[i].second.imag() ),0.);
+		}
+	}
 
 }
 // ========================================================================================
@@ -147,8 +202,6 @@ void Twannier::normalize_wannier()
 // ----------------------------------------------------------------------------------------
 void Twannier::calc_wannier_f()
 {
-
-
     for(int ix = 0; ix < 10000; ix++)
     {
         double x = ix/100. - 50.;
@@ -161,14 +214,15 @@ void Twannier::calc_wannier_f()
 				for(int i2 = -lsize; i2 < lsize+1; ++i2)
 				{
 	                tmp += bloch_functions[i0][i1+ksize][i2+lsize] * std::exp( std::complex<long double>
-							(0., (i2 + i1 *1./(2.*ksize+1.))* x)   );
+							(0., (2*i2 + i1 *2./(2.*ksize+1.))* x)   );
 	                //std::cout << tmp << std::endl;
 		        }
 		        wannier_x += eigVec[i1+ksize + (2*ksize+1)*i0] * tmp;
 			}
-			std::cout << x << " " << wannier_x.real()<<" "<<wannier_x.imag()<< std::endl;
 		}
+		wannier_fun.push_back( std::make_pair(x, wannier_x) );
 	}
+	//std::cout<< __func__<< " " << wannier_fun.size() << std::endl;
 }
 // ========================================================================================
 
