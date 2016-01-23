@@ -78,17 +78,23 @@ Tbloch::Tbloch( Tlattice latt, int ks, int ls,  double x_m, int bands, int which
             std::vector< std::complex<long double> > eigV;        
             for(int i2 = 0; i2 < 2*lsize+1; i2++)
             {
+				//if( std::abs (eigvec( i2,i0 + which_band) ) > std::pow(10.,-6) )
+				//if( i2 >= 10 && i2 < 31  )
+				//{
 				eigV.push_back( eigvec( i2,i0 + which_band) );
+				//}
+				//else eigV.push_back( std::complex<long double>(0.,0.) );
+
             }
             
             bloch_functions[i0].push_back( eigV );
 			energies[i0].push_back( eigval( i0 + which_band ) );
-/*    
+    
             for(int i = 0; i < eigV.size(); i++)
             {
-                std::cout <<eigV[i]<<std::endl;
+                std::cout <<i<<" "<<eigV[i]<<std::endl;
             }
-*/    
+    
         }
     }
 }
@@ -121,28 +127,4 @@ void Tbloch::print_dispersion( std::string fname )
 // ========================================================================================
 
 
-/*
-	Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic> A;
-	A.resize(reduced_dm.get_left_i(), reduced_dm.get_right_i());
-	for(int il = 0; il < reduced_dm.get_left_i(); ++il)
-	{
-		for(int ir = 0; ir < reduced_dm.get_right_i(); ++ir)
-		{
-		A(il, ir) = reduced_dm.get_m_data(0, il, ir);
-		}
-	}
-	//std::cout << "Here is the matrix A:\n" << A << std::endl;
-	Eigen::SelfAdjointEigenSolver< Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic> > eigensolver(A);
-	//std::cout<<"po diagonalizacji"<<std::endl;
-	//if (eigensolver.info() != Success) abort();
-	//std::cout << "The eigenvalues of A are:\n" << eigensolver.eigenvalues() << std::endl;
-	//std::cout << "Here's a matrix whose columns are eigenvectors of A \n"
-	//<< "corresponding to these eigenvalues:\n"
-	//<< eigensolver.eigenvectors() << std::endl;
-	// calculate spectrum and write it to file
-	
-	//fs1<< eigensolver.eigenvalues() << std::endl;
-
-    std::cout << eigensolver.eigenvalues() <<std::endl;
-*/
     

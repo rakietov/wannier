@@ -16,7 +16,7 @@
 
 // ----------------------------------------------------------------------------------------
 Twannier::Twannier( Tbloch bl1, int which_s) : 
-	which_site (which_s), ksize(bl1.return_ksize()), lsize(bl1.return_lsize()), x_max(bl1.return_x_max()),
+	which_site (which_s), ksize(bl1.return_ksize()), lsize(bl1.return_lsize() ), x_max(bl1.return_x_max()),
 	n_of_bands( bl1.return_n_of_bands()), lattice( bl1.return_lattice()), 
 	bloch_functions(bl1.return_bloch_functions())
 {
@@ -48,25 +48,25 @@ void Twannier::setupXXmatrix()
 				for( int i2 = -ksize; i2 < ksize+1; ++i2)
 				{
 					std::complex<long double> mat_ele = (0.,0.);
-					for(int n1 = 0; n1 <= 2*lsize; ++n1)
+					for(int n1 = -lsize/2; n1 < lsize/2 + 1; ++n1)
 					{
-						for(int n2 = 0; n2 <= 2*lsize ; ++n2)
+						for(int n2 = -lsize/2; n2 < lsize/2 + 1; ++n2)
 						{
 							if( i1 - i2 + (2*ksize + 1)*(n1-n2) != 0)
 							{
 								std::complex<long double> tmp =  std::complex<long double>(
 										double(std::pow((-1.), i1-i2+n1-n2)) / 
-										((double(i1-i2)/(2.*ksize+1.)+ n1-n2 )));
+										((double(i1-i2)/(2.*ksize+1.)+ double(n1-n2) )));
 								tmp *= std::complex<long double>(0.,0.5)  *
-									   std::conj( bloch_functions[i0p][i2+ksize][n2] ) *  
-										bloch_functions[i0][i1+ksize][n1];
+									   std::conj( bloch_functions[i0p][i2+ksize][n2+lsize] ) *  
+										bloch_functions[i0][i1+ksize][n1+lsize];
 								mat_ele += tmp;
 							}
 						}
 					}	
 					XXm(i1+ksize + i0*(2*ksize + 1),i2+ksize + i0p*(2*ksize+1) ) = mat_ele;
-		            //std::cout << i1+ksize + i0p*(2*ksize + 1)<<" "<<i2+ksize + i0*(2*ksize+1)<<" "<<
-					//		XXm(i1+ksize + i0p*(2*ksize + 1),i2+ksize + i0*(2*ksize+1) ) << std::endl;
+		            std::cout << i1+ksize + i0p*(2*ksize + 1)<<" "<<i2+ksize + i0*(2*ksize+1)<<" "<<
+							XXm(i1+ksize + i0p*(2*ksize + 1),i2+ksize + i0*(2*ksize+1) ) << std::endl;
 				}
 			}
 		}
@@ -96,9 +96,9 @@ std::vector< std::complex<long double> > Twannier::diagonalizeXXmatrix()
 	}
 
 	std::vector< std::complex<long double> > eigV;
-    for(int i2 = 0; i2 < (2*ksize+1)*n_of_bands; i2++)
+    for(int i2 = 0; i2 < (2*ksize+1)*n_of_bands; ++i2)
     {
-        eigV.push_back( eigvec( i2, (2*ksize+1)*(n_of_bands-1.) + which_site )  );
+        eigV.push_back( eigvec( i2, n_of_bands*ksize  + which_site )  );
     }
    
 //	std::cout << __func__;  
@@ -210,14 +210,17 @@ void Twannier::calc_wannier_f()
 		{
 	        for(int i1= -ksize; i1 < ksize +1; ++i1)
 		    {
-				std::complex<long double> tmp = 0.;
+				std::complex<long double> tmp = std::complex<long double>(0., 0.);
 				for(int i2 = -lsize; i2 < lsize+1; ++i2)
 				{
 	                tmp += bloch_functions[i0][i1+ksize][i2+lsize] * std::exp( std::complex<long double>
-							(0., (2*i2 + i1 *2./(2.*ksize+1.))* x)   );
-	                //std::cout << tmp << std::endl;
+							(0., (2.*i2 + i1 *2./(2.*ksize+1.))* x) );
+	                //std::cout << bloch_functions[i0][i1+ksize][i2+lsize] *
+					//				std::exp( std::complex<long double>      
+                    //         (0., (2.*i2 + i1 *2./(2.*ksize+1.))* x) ) << std::endl;
 		        }
 		        wannier_x += eigVec[i1+ksize + (2*ksize+1)*i0] * tmp;
+				//std::cout <<"d_wan " << eigVec[i1+ksize + (2*ksize+1)*i0] * tmp <<std::endl;
 			}
 		}
 		wannier_fun.push_back( std::make_pair(x, wannier_x) );
