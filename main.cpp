@@ -29,7 +29,7 @@ int main(){
 		Tbloch blo1(lat1, 40, 20, 100., 2, 1);
 
 
-		Twannier wan1( blo1,0);
+		Twannier wan1( blo1,1);
 
 		wan1.print_wannier("dupa.txt");
 

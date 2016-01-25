@@ -58,8 +58,8 @@ void Twannier::setupXXmatrix()
 										double(std::pow((-1.), i1-i2+n1-n2)) / 
 										((double(i1-i2)/(2.*ksize+1.)+ double(n1-n2) )));
 								tmp *= std::complex<long double>(0.,0.5)  *
-									   std::conj( bloch_functions[i0p][i2+ksize][n2+lsize] ) *  
-										bloch_functions[i0][i1+ksize][n1+lsize];
+									   bloch_functions[i0p][i2+ksize][n2+lsize] *  
+										std::conj(bloch_functions[i0][i1+ksize][n1+lsize]);
 								mat_ele += tmp;
 								//std::cout << tmp << " " << mat_ele  << std::endl;
 							}
