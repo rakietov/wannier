@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <complex>
 #include <armadillo>
-
+//#include </home/sierant/Eigen324/Eigen/Dense>
 #include "lattice.h"
 #include "bloch.h"
 
@@ -48,6 +48,8 @@ private:
     
 	std::vector< std::complex<long double> > eigVec;
     arma::Mat< std::complex<double> > XXm;
+
+//Eigen::Matrix<  std::complex<long double>, Eigen::Dynamic, Eigen::Dynamic> XXm;
 
 	std::vector< std::vector< double > > energies;
     std::vector< std::vector< std::vector< std::complex<long double> > > > bloch_functions;

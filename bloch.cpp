@@ -5,7 +5,9 @@
 #include <cmath>
 #include <algorithm>
 #include <complex>
-#include <armadillo>
+//#include <armadillo>
+
+#include </home/sierant/Eigen324/Eigen/Dense>
 
 #include "bloch.h"
 
@@ -20,8 +22,8 @@ Tbloch::Tbloch( Tlattice latt, int ks, int ls,  double x_m, int bands, int which
     lattice = latt;
 
 // setup the Hamiltonian 
-	//Eigen::Matrix<  std::complex<long double>, Eigen::Dynamic, Eigen::Dynamic> ham;
-	arma::Mat< std::complex<double> > ham;
+	Eigen::Matrix<  std::complex<long double>, Eigen::Dynamic, Eigen::Dynamic> ham;
+	//arma::Mat< std::complex<double> > ham;
 	ham.resize( 2*lsize + 1, 2*lsize + 1);
 
     for(int i0 = 0; i0 < n_of_bands; ++i0)
@@ -40,7 +42,7 @@ Tbloch::Tbloch( Tlattice latt, int ks, int ls,  double x_m, int bands, int which
         {
             for(int i2 = -lsize; i2 < lsize+1; ++i2)
             {
-                ham(i1 + lsize, i2 + lsize) = (0., 0.);        
+                ham(i1 + lsize, i2 + lsize) = std::complex<double>(0., 0.);        
             }
         }
 
@@ -61,13 +63,13 @@ Tbloch::Tbloch( Tlattice latt, int ks, int ls,  double x_m, int bands, int which
             }
         }
 
-	    //Eigen::SelfAdjointEigenSolver< Eigen::Matrix<std::complex<long double>, 
-		//					  Eigen::Dynamic, Eigen::Dynamic> > eigensolver(ham);
+	    Eigen::SelfAdjointEigenSolver< Eigen::Matrix<std::complex<long double>, 
+							  Eigen::Dynamic, Eigen::Dynamic> > eigensolver(ham);
 	
-		arma::vec eigval;
-		arma::Mat< std::complex<double> > eigvec;
+		//arma::vec eigval;
+		//arma::Mat< std::complex<double> > eigvec;
 
-		arma::eig_sym(eigval, eigvec, ham);
+		//arma::eig_sym(eigval, eigvec, ham, "std");
 
         
 		//std::cout << kbier << std::endl;
@@ -81,20 +83,21 @@ Tbloch::Tbloch( Tlattice latt, int ks, int ls,  double x_m, int bands, int which
 				//if( std::abs (eigvec( i2,i0 + which_band) ) > std::pow(10.,-6) )
 				//if( i2 >= 10 && i2 < 31  )
 				//{
-				eigV.push_back( eigvec( i2,i0 + which_band) );
+				eigV.push_back( eigensolver.eigenvectors().col(i0+which_band)[i2]);
+				//eigV.push_back( eigvec( i2,i0 + which_band) );
 				//}
 				//else eigV.push_back( std::complex<long double>(0.,0.) );
 
             }
             
             bloch_functions[i0].push_back( eigV );
-			energies[i0].push_back( eigval( i0 + which_band ) );
-    
+			energies[i0].push_back( eigensolver.eigenvalues()[ i0 + which_band ] );
+			//energies[i0].push_back( eigval( i0 + which_band ) );
             for(int i = 0; i < eigV.size(); i++)
             {
-                std::cout <<i<<" "<<eigV[i]<<std::endl;
+            //    std::cout <<i<<" "<<eigV[i]<<std::endl;
             }
-    
+			
         }
     }
 }

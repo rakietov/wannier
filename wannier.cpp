@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <complex>
 
-
+//#include </home/sierant/Eigen324/Eigen/Dense>
 #include <armadillo>
 #include "wannier.h"
 #include "bloch.h"
@@ -18,7 +18,7 @@
 Twannier::Twannier( Tbloch bl1, int which_s) : 
 	which_site (which_s), ksize(bl1.return_ksize()), lsize(bl1.return_lsize() ), x_max(bl1.return_x_max()),
 	n_of_bands( bl1.return_n_of_bands()), lattice( bl1.return_lattice()), 
-	bloch_functions(bl1.return_bloch_functions())
+	bloch_functions(bl1.return_bloch_functions()), energies( bl1.return_energies() )
 {
 
 	this -> setupXXmatrix();
@@ -26,7 +26,7 @@ Twannier::Twannier( Tbloch bl1, int which_s) :
 	this -> calc_wannier_f();
 	this -> normalize_wannier();
 	this -> shift_to_real();
-
+	std::cout <<"Energy = " << calc_energy() << std::endl;
 }
 // ========================================================================================
 
@@ -48,9 +48,9 @@ void Twannier::setupXXmatrix()
 				for( int i2 = -ksize; i2 < ksize+1; ++i2)
 				{
 					std::complex<long double> mat_ele = (0.,0.);
-					for(int n1 = -lsize/2; n1 < lsize/2 + 1; ++n1)
+					for(int n1 = -lsize; n1 < lsize + 1; ++n1)
 					{
-						for(int n2 = -lsize/2; n2 < lsize/2 + 1; ++n2)
+						for(int n2 = -lsize; n2 < lsize + 1; ++n2)
 						{
 							if( i1 - i2 + (2*ksize + 1)*(n1-n2) != 0)
 							{
@@ -61,17 +61,20 @@ void Twannier::setupXXmatrix()
 									   std::conj( bloch_functions[i0p][i2+ksize][n2+lsize] ) *  
 										bloch_functions[i0][i1+ksize][n1+lsize];
 								mat_ele += tmp;
+								//std::cout << tmp << " " << mat_ele  << std::endl;
 							}
 						}
 					}	
 					XXm(i1+ksize + i0*(2*ksize + 1),i2+ksize + i0p*(2*ksize+1) ) = mat_ele;
-		            std::cout << i1+ksize + i0p*(2*ksize + 1)<<" "<<i2+ksize + i0*(2*ksize+1)<<" "<<
-							XXm(i1+ksize + i0p*(2*ksize + 1),i2+ksize + i0*(2*ksize+1) ) << std::endl;
+					//std::cout<< "mat ele " << mat_ele <<std::endl;
+		            //std::cout << i1+ksize + i0*(2*ksize + 1)<<" "<<i2+ksize + i0p*(2*ksize+1)<<" "<<
+					//		XXm(i1+ksize + i0*(2*ksize + 1),i2+ksize + i0p*(2*ksize+1) ) << std::endl;
 				}
 			}
 		}
 	}
-    //std::cout << "setup XX matrix DONE" << std::endl;
+    std::cout << "setup XX matrix DONE" << std::endl;
+
 }
 // ========================================================================================
 
@@ -81,10 +84,18 @@ std::vector< std::complex<long double> > Twannier::diagonalizeXXmatrix()
 {
 	arma::Mat< std::complex<double> > eigvec;
 	arma::vec eigval;
-
 	arma::eig_sym( eigval, eigvec, XXm);
+	
 
-	for(int i = 0; i < (2*ksize+1)*n_of_bands; ++i)
+	std::cout<< __func__ <<std::endl;
+
+	
+	//    Eigen::SelfAdjointEigenSolver< Eigen::Matrix<std::complex< long double>, 
+	//						  Eigen::Dynamic, Eigen::Dynamic> > eigensolver(XXm);
+//	std::cout << eigensolver.eigenvalues() <<std::endl;
+
+
+for(int i = 0; i < (2*ksize+1)*n_of_bands; ++i)
 	{
 		std::cout.precision(15);
 		std::cout << eigval( i ) << std::endl;
@@ -92,13 +103,14 @@ std::vector< std::complex<long double> > Twannier::diagonalizeXXmatrix()
 	for(int i = 0; i < (2*ksize+1)*n_of_bands-1; ++i)
 	{
 		std::cout.precision(15);
-		std::cout << eigval( i+1 ) - eigval(i) << std::endl;
+		std::cout <<eigval(i+1) - eigval(i) <<std::endl;
 	}
 
 	std::vector< std::complex<long double> > eigV;
     for(int i2 = 0; i2 < (2*ksize+1)*n_of_bands; ++i2)
     {
-        eigV.push_back( eigvec( i2, n_of_bands*ksize  + which_site )  );
+		eigV.push_back( eigvec( i2, n_of_bands*ksize + which_site) );   
+		//eigV.push_back( eigensolver.eigenvectors().col( n_of_bands*ksize  + which_site )[i2]  );
     }
    
 //	std::cout << __func__;  
@@ -204,7 +216,7 @@ void Twannier::calc_wannier_f()
 {
     for(int ix = 0; ix < 10000; ix++)
     {
-        double x = ix/100. - 50.;
+        long double x = ix/100. - 50.;
         std::complex<long double> wannier_x (0., 0.);
 		for(int i0 = 0; i0 < n_of_bands; ++i0)
 		{
@@ -233,6 +245,18 @@ void Twannier::calc_wannier_f()
 // ----------------------------------------------------------------------------------------
 double Twannier::calc_energy()
 {
+	double energ = 0.0;
+
+	for(int i0 = 0; i0 < n_of_bands; ++i0)
+	{
+		for(int i1 = -ksize; i1 < ksize + 1; ++i1)
+		{
+			energ +=std::pow(std::abs( eigVec[i0*(2*ksize+1) + i1+ksize]  ),2.) * energies[i0][i1+ksize];
+		}
+
+	}
+	return energ;
+
 
 }
 // ========================================================================================

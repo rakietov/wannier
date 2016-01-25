@@ -17,16 +17,16 @@ using namespace std;
 int main(){
 
 
-		double a = 0.0 ;    
+		double a = 0.4 ;    
 		double V0 = 40.;
 		auto phase = std::exp(std::complex<long double>(0.,0.5*3.14159265));
 		std::vector< std::complex<long double> > coeffs = { 
-        std::complex<long double>(V0*((1.+a)/2. ),0.), 
-        std::complex<long double>((-a/4.)*V0 ,0.)*phase  , 
+        std::complex<long double>(V0*((1.+a)/2.),0.), 
+        std::complex<long double>((-a/4.)*V0,0.)*phase  , 
         std::complex<long double>( -(1./4.)*V0,0.)*phase*phase  };
     
 	    Tlattice lat1( coeffs );
-		Tbloch blo1(lat1, 40, 20, 100., 2, 0);
+		Tbloch blo1(lat1, 40, 20, 100., 2, 1);
 
 
 		Twannier wan1( blo1,0);
